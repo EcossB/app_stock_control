@@ -88,8 +88,8 @@ public class ProductoController {
 		// 10- fuera de la lista cerramos la conexion.
 	}
 
-    public void guardar(Object producto) {
-		// TODO
+    public void guardar(Map<String, String> producto) {
+
 	}
 
 }
