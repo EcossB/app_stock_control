@@ -15,10 +15,18 @@ public class ProductoController {
         Connection con = new ConnectionFactory().recuperaConexion();
 
         //creando el statement
-        Statement statement = con.createStatement();
+        //Statement statement = con.createStatement();
 
         //ejecutando el query, como es un update no devolvera true, sino false.
-        statement.execute("UPDATE producto SET nombre = '" + nombre+ "', descripcion = '"+ descripcion + "', cantidad = " +cantidad+ " where id = " + id);
+        //statement.execute("UPDATE producto SET nombre = '" + nombre+ "', descripcion = '"+ descripcion + "', cantidad = " +cantidad+ " where id = " + id);
+
+        //haciendo lo mismo pero con PreparedStatement.
+        PreparedStatement statement = con.prepareStatement("UPDATE producto SET nombre = ?, descripcion = ?, cantidad = ? where id = ?");
+        statement.setString(1, nombre);
+        statement.setString(2, descripcion);
+        statement.setInt(3, cantidad);
+        statement.setInt(4, id);
+
 
         //utilizamos el metodo getUpdateCount asi sabemos sabemos cuantos registro modifico
         int updated = statement.getUpdateCount();
@@ -34,8 +42,13 @@ public class ProductoController {
     public int eliminar(Integer id) throws SQLException {
         Connection con = new ConnectionFactory().recuperaConexion();
 
-        Statement statement = con.createStatement();
-        statement.execute("DELETE FROM PRODUCTO where id = " + id);
+        //manera tradicional donde el sql inyection es posible
+        //Statement statement = con.createStatement(); statement normal
+        //statement.execute("DELETE FROM PRODUCTO where id = " id);
+
+        PreparedStatement statement = con.prepareStatement("DELETE FROM PRODUCTO where id = ?"); //prepared statement
+        statement.setInt(1, id);
+        statement.execute();
 
 
         //Nos devuelve un int
@@ -52,7 +65,8 @@ public class ProductoController {
         // para crear un statement hay que usar el metodo statement.
         // y devuelve un Statement.
         // con el statement es que podemos ejecutar querys para la base de datos.
-        Statement statement = con.createStatement();
+        //Statement statement = con.createStatement(); // con statement normal
+        PreparedStatement statement = con.prepareStatement("SELECT id, nombre, descripcion, cantidad FROM PRODUCTO"); // con prepareStatement
 
         //para poder ejectutar el statement tenemos que usar otro metodo:
         // En el metodo execute pasamos el query que queremos que se ejecute en la base datos
@@ -60,7 +74,8 @@ public class ProductoController {
         // este metodo retorna un boolean. para indicar que el statement es un listado o no
         // si es un listado devuelve true.
         // si no es un listado devuelve false y nos indica que el query que ejecutamos es de una setencia insert O update o delete.
-        boolean result = statement.execute("SELECT id, nombre, descripcion, cantidad FROM PRODUCTO");
+        // antes del prepared statement -> boolean result = statement.execute("SELECT id, nombre, descripcion, cantidad FROM PRODUCTO");
+        boolean result = statement.execute();
 
         // para poder tomar el resultado del statement que justamente acabamos de ejecutar
         //utilizamos el metodo getResultSet();
@@ -120,22 +135,33 @@ public class ProductoController {
         //conexion a la base de datos
         Connection con = new ConnectionFactory().recuperaConexion();
 
-        Statement statement = con.createStatement();
+        //Manera haciendolo con PreparedStatement. lo cual nos ayuda a proteger nuestros querys y la db
+        PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO PRODUCTO(nombre, descripcion, cantidad) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+        preparedStatement.setString(1, producto.get("Nombre"));
+        preparedStatement.setString(2, producto.get("Descripcion"));
+        preparedStatement.setInt(3, Integer.valueOf(producto.get("Cantidad")));
+
+        preparedStatement.execute();
+
+        ResultSet resultSet = preparedStatement.getGeneratedKeys();
+
+        //Statement statement = con.createStatement();
 
         // va a retornar un false por que no es un resultSet es decir no es un listado
         // para que no nos retorne un false, sobrecargamos el metodo y le agregamos
         // como siguiente parametro el retornar llaves generadas.
-        // asi lo podemos correr dentro de un while.
-        statement.execute("INSERT INTO PRODUCTO(nombre, descripcion, cantidad)" +
-                "VALUES ('" + producto.get("Nombre") + "', '"
-                + producto.get("Descripcion") + "', " +
-                producto.get("Cantidad") + ")", Statement.RETURN_GENERATED_KEYS); // con este valor aca, tomamos el id como resultado de la ejecucion del insert
-        // es decir este metodo va a retornar el id del registro creado.
 
-        // Cuando el execute nos genera nuestro id. podemos utilizar el metodo
-        // getGeneratedKeys que basicamente nos da una lista de los id creados.
-        // esto lo podemos tambien iterar
-        ResultSet resultSet = statement.getGeneratedKeys();
+//         asi lo podemos correr dentro de un while.
+//        statement.execute("INSERT INTO PRODUCTO(nombre, descripcion, cantidad)" +
+//                "VALUES ('" + producto.get("Nombre") + "', '"
+//                + producto.get("Descripcion") + "', " +
+//                producto.get("Cantidad") + ")", Statement.RETURN_GENERATED_KEYS); // con este valor aca, tomamos el id como resultado de la ejecucion del insert
+//        // es decir este metodo va a retornar el id del registro creado.
+//
+//        // Cuando el execute nos genera nuestro id. podemos utilizar el metodo
+//        // getGeneratedKeys que basicamente nos da una lista de los id creados.
+//        // esto lo podemos tambien iterar
+//        ResultSet resultSet = statement.getGeneratedKeys();
 
         while (resultSet.next()) {
             // imprimiendo en consola el id que acaba de crear.
