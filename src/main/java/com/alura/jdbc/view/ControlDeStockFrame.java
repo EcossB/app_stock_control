@@ -187,16 +187,17 @@ public class ControlDeStockFrame extends JFrame {
                     Integer id =  Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 0).toString());
                     String nombre = (String) modelo.getValueAt(tabla.getSelectedRow(), 1);
                     String descripcion = (String) modelo.getValueAt(tabla.getSelectedRow(), 2);
-                    Integer cantidad = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 3).toString());
+                    Integer cantidad = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 3).toString()); //agregando la cantidad asi tambien pueda ser mod
 
-                    int actualzado;
+                    int actualzado; // declarando variable.
+                    //bloque de try catch donde se maneja la SQLException del metodo modificar.
                     try {
                        actualzado = this.productoController.modificar(nombre, descripcion, cantidad, id);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
 
-                    JOptionPane.showMessageDialog(this, String.format("%d item modificado con éxito!" , actualzado));
+                    JOptionPane.showMessageDialog(this, String.format("%d item modificado con éxito!" , actualzado)); //creando mensaje de dialogo donde decimos el registro que se modifico.
                 }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
     }
 
