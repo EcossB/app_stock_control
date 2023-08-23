@@ -88,8 +88,34 @@ public class ProductoController {
 		// 10- fuera de la lista cerramos la conexion.
 	}
 
-    public void guardar(Map<String, String> producto) {
+    public void guardar(Map<String, String> producto) throws SQLException {
+		//conexion a la base de datos
+		Connection con = new ConnectionFactory().recuperaConexion();
 
+		Statement statement = con.createStatement();
+
+		// va a retornar un false por que no es un resultSet es decir no es un listado
+		// para que no nos retorne un false, sobrecargamos el metodo y le agregamos
+		// como siguiente parametro el retornar llaves generadas.
+		// asi lo podemos correr dentro de un while.
+		statement.execute("INSERT INTO PRODUCTO(nombre, descripcion, cantidad)" +
+				"VALUES ('" + producto.get("Nombre")+ "', '"
+				+ producto.get("Descripcion")+ "', " +
+				producto.get("Cantidad") + ")", Statement.RETURN_GENERATED_KEYS); // con este valor aca, tomamos el id como resultado de la ejecucion del insert
+		// es decir este metodo va a retornar el id del registro creado.
+
+		// Cuando el execute nos genera nuestro id. podemos utilizar el metodo
+		// getGeneratedKeys que basicamente nos da una lista de los id creados.
+		// esto lo podemos tambien iterar
+		ResultSet resultSet = statement.getGeneratedKeys();
+
+		while(resultSet.next()){
+			// imprimiendo en consola el id que acaba de crear.
+			System.out.println(String.format(
+					"Fue insertado el producto de ID %d",
+					resultSet.getInt(1)));// aqui le estamos diciendo que nos devuelva el id.
+		}
+		con.close();
 	}
 
 }
