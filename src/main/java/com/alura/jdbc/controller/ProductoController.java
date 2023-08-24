@@ -132,14 +132,52 @@ public class ProductoController {
     }
 
     public void guardar(Map<String, String> producto) throws SQLException {
+        String nombre = producto.get("Nombre");
+        String descripcion = producto.get("Descripcion");
+        Integer cantidad = Integer.valueOf(producto.get("Cantidad"));
+        Integer maximoCantidad = 50; // agregando regla de negocio donde solo podemos guardar 50 objetos de x cosa.
+
+
         //conexion a la base de datos
         Connection con = new ConnectionFactory().recuperaConexion();
 
+        // evita que se haga el cambio automatico.
+        //debemos de agregar el comando de comit de manera explicita en nuestro codigo cuando el auto comitt es false.
+        // los comandos de commit y rollback deben de ser explicitos en el codigo. y lo mejor es ponerlo dentro de un try cach
+        // tambien esto se usa para manejar los errores y asi evitar mandar informacion por la mitad a la DB.
+        con.setAutoCommit(false);
+
         //Manera haciendolo con PreparedStatement. lo cual nos ayuda a proteger nuestros querys y la db
         PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO PRODUCTO(nombre, descripcion, cantidad) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-        preparedStatement.setString(1, producto.get("Nombre"));
-        preparedStatement.setString(2, producto.get("Descripcion"));
-        preparedStatement.setInt(3, Integer.valueOf(producto.get("Cantidad")));
+        //
+
+        //logica para la regla de negocio
+        try {
+            do {
+                int cantidadParaGuardar = Math.min(cantidad, maximoCantidad); //aqui nos va a devolver el minimo entre la cantidad del usuario o del sistema por defecto.
+                ejecutarRegistro(preparedStatement, nombre, descripcion, cantidadParaGuardar);
+                cantidad -= maximoCantidad; // esto es igual a decir cantidad = cantidad - maximocantidad;
+            } while (cantidad > 0);
+            con.commit();// el commit se manda.
+            System.out.println("COMMIT"); // aqui se ejecuta el commit y esto manda los cambios a la base de datos.
+        } catch (Exception e) {
+            con.rollback();
+            System.out.println("ROLLBACK");// un rollback es que basicamente un comando que no permite que se mande la info a la base de dato si ocurre un error en medio de la transaccion
+            // esto evita que la info se tenga que mandar completa siempre.
+        }
+
+        preparedStatement.close();
+        con.close();
+    }
+
+    private static void ejecutarRegistro(PreparedStatement preparedStatement, String nombre, String descripcion, Integer cantidad) throws SQLException {
+        if (cantidad < 50) {
+            throw new RuntimeException("Ocurrio un error.");
+        }
+
+        preparedStatement.setString(1, nombre);
+        preparedStatement.setString(2, descripcion);
+        preparedStatement.setInt(3, cantidad);
 
         preparedStatement.execute();
 
@@ -163,13 +201,16 @@ public class ProductoController {
 //        // esto lo podemos tambien iterar
 //        ResultSet resultSet = statement.getGeneratedKeys();
 
+
+        // ahora vamos a joder con try with resources
         while (resultSet.next()) {
             // imprimiendo en consola el id que acaba de crear.
             System.out.println(String.format(
                     "Fue insertado el producto de ID %d",
                     resultSet.getInt(1)));// aqui le estamos diciendo que nos devuelva el id.
         }
-        con.close();
+
+        resultSet.close();
     }
 
 }
