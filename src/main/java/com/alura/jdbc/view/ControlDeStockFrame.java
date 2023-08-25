@@ -19,6 +19,7 @@ import javax.swing.table.DefaultTableModel;
 
 import com.alura.jdbc.controller.CategoriaController;
 import com.alura.jdbc.controller.ProductoController;
+import com.alura.jdbc.modelo.Producto;
 
 public class ControlDeStockFrame extends JFrame {
 
@@ -257,10 +258,9 @@ public class ControlDeStockFrame extends JFrame {
         }
 
         // TODO
-        var producto = new HashMap<String, String>();
-         producto.put("Nombre" ,textoNombre.getText());
-         producto.put("Descripcion" ,textoDescripcion.getText());
-         producto.put("Cantidad", String.valueOf(cantidadInt));
+        var producto = new Producto(textoNombre.getText(),
+                textoDescripcion.getText(),
+                cantidadInt);
 
         var categoria = comboCategoria.getSelectedItem();
 
