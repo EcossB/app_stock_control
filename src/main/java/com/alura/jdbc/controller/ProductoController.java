@@ -1,6 +1,7 @@
 package com.alura.jdbc.controller;
 
 import com.alura.jdbc.factory.ConnectionFactory;
+import com.alura.jdbc.modelo.Producto;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -131,13 +132,7 @@ public class ProductoController {
         // 10- fuera de la lista cerramos la conexion.
     }
 
-    public void guardar(Map<String, String> producto) throws SQLException {
-        String nombre = producto.get("Nombre");
-        String descripcion = producto.get("Descripcion");
-        Integer cantidad = Integer.valueOf(producto.get("Cantidad"));
-        Integer maximoCantidad = 50; // agregando regla de negocio donde solo podemos guardar 50 objetos de x cosa.
-
-
+    public void guardar(Producto producto) throws SQLException {
         //conexion a la base de datos
         final Connection con = new ConnectionFactory().recuperaConexion();
 
@@ -153,14 +148,9 @@ public class ProductoController {
 
             //logica para la regla de negocio
             try (preparedStatement){
-                do {
-                    int cantidadParaGuardar = Math.min(cantidad, maximoCantidad); //aqui nos va a devolver el minimo entre la cantidad del usuario o del sistema por defecto.
-                    ejecutarRegistro(preparedStatement, nombre, descripcion, cantidadParaGuardar);
-                    cantidad -= maximoCantidad; // esto es igual a decir cantidad = cantidad - maximocantidad;
-                } while (cantidad > 0);
+                 ejecutarRegistro(preparedStatement, producto);
                 con.commit(); // el commit se manda.
                 System.out.println("COMMIT"); // aqui se ejecuta el commit y esto manda los cambios a la base de datos.
-
             } catch (Exception e) {
                 con.rollback();
                 System.out.println("ROLLBACK");
@@ -170,14 +160,11 @@ public class ProductoController {
         }
     }
 
-    private static void ejecutarRegistro(PreparedStatement preparedStatement, String nombre, String descripcion, Integer cantidad) throws SQLException {
-        if (cantidad < 50) {
-            throw new RuntimeException("Ocurrio un error.");
-        }
+    private static void ejecutarRegistro(PreparedStatement preparedStatement, Producto producto) throws SQLException {
 
-        preparedStatement.setString(1, nombre);
-        preparedStatement.setString(2, descripcion);
-        preparedStatement.setInt(3, cantidad);
+        preparedStatement.setString(1, producto.getNombre());
+        preparedStatement.setString(2, producto.getDescripcion());
+        preparedStatement.setInt(3, producto.getCantidad());
 
         preparedStatement.execute();
 
@@ -206,9 +193,10 @@ public class ProductoController {
         try(resultSet) {
             while (resultSet.next()) {
                 // imprimiendo en consola el id que acaba de crear.
+                producto.setId(resultSet.getInt(1));
                 System.out.println(String.format(
-                        "Fue insertado el producto de ID %d",
-                        resultSet.getInt(1)));// aqui le estamos diciendo que nos devuelva el id.
+                        "Fue insertado el producto de ID %s",
+                        producto));// aqui le estamos diciendo que nos devuelva el id.
             }
         }
     }
