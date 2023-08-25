@@ -26,6 +26,9 @@ public class ConnectionFactory {
         //Contrasena
         poolDataSource.setPassword("E.cossB2104");
 
+        //especificando el maximo de conexiones que podemos mantener abiertas
+        poolDataSource.setMaxPoolSize(10);
+
         //dentro del atributo privado establecemos el pool de conexiones.
         this.dataSource =poolDataSource;
     }
