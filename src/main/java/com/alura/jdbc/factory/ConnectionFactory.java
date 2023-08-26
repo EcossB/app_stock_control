@@ -33,9 +33,13 @@ public class ConnectionFactory {
         this.dataSource =poolDataSource;
     }
 
-    public Connection recuperaConexion() throws SQLException {
+    public Connection recuperaConexion() {
         //ahora retornamos del atributo datasource el metodo getConnection.
         //esto se puede hacer debido a que ese atributo esa referenciando el pool de conexiones.
-        return this.dataSource.getConnection();
+        try {
+            return this.dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
