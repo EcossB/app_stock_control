@@ -42,14 +42,17 @@ public class ProductoDao {
              */
             con.setAutoCommit(false);
             //Manera haciendolo con PreparedStatement. lo cual nos ayuda a proteger nuestros querys y la db
-            final PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO PRODUCTO(nombre, descripcion, cantidad) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            final PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO PRODUCTO(nombre, descripcion, cantidad, categoria_id) VALUES (?, ?, ?,?)", Statement.RETURN_GENERATED_KEYS);
 
             //logica para la regla de negocio
                 try (preparedStatement) {
                     ejecutarRegistro(preparedStatement, producto);
-                    //con.commit(); // el commit se manda.
+                    con.commit(); // el commit se manda.
                     //System.out.println("COMMIT"); // aqui se ejecuta el commit y esto manda los cambios a la base de datos.
-            }
+            } catch (SQLException e){
+                    con.rollback();
+                    throw new RuntimeException(e);
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
                 //.rollback();
@@ -64,6 +67,7 @@ public class ProductoDao {
         preparedStatement.setString(1, producto.getNombre());
         preparedStatement.setString(2, producto.getDescripcion());
         preparedStatement.setInt(3, producto.getCantidad());
+        preparedStatement.setInt(4, producto.getCategoriaId());
 
         preparedStatement.execute();
 
@@ -231,6 +235,35 @@ public class ProductoDao {
         } catch (SQLException e){
             throw  new RuntimeException(e);
         }
+    }
+
+    public List<Producto> listar(Integer categoriaId) {
+        List<Producto> resultado = new ArrayList<>();
+        Connection con = new ConnectionFactory().recuperaConexion();
+        try(con) {
+            final PreparedStatement statement = con.prepareStatement("SELECT id, nombre, descripcion, cantidad FROM PRODUCTO where categoria_id = ?"); // con prepareStatement
+            try(statement) {
+                statement.setInt(1,categoriaId);
+                statement.execute();
+
+                final ResultSet resultSet = statement.getResultSet();
+                try (resultSet) {
+                    while (resultSet.next()) {
+
+                        Producto fila = new Producto(resultSet.getInt("id"),
+                                resultSet.getString("Nombre"),
+                                resultSet.getString("descripcion"),
+                                resultSet.getInt("cantidad"));
+
+                        resultado.add(fila); // agregamos la fila a la lista.
+                    }
+                }
+            }
+
+        } catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+        return resultado;
     }
 }
 
